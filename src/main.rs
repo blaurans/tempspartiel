@@ -17,7 +17,9 @@ struct CalcRequest {
     full_time_net: f64,
     percent: f64,
     months: u32,
-    phase2_rate: Option<f64>,
+    absence_days: Option<u32>,
+    seniority_years: Option<f64>,
+    cadre: Option<bool>,
 }
 
 #[derive(Serialize, Clone)]
@@ -37,11 +39,31 @@ struct MonthRow {
 struct CalcResponse {
     full_time_net: f64,
     percent: f64,
+    maint_days: u32,
     phase2_rate: f64,
     months: Vec<MonthRow>,
     total_income: f64,
     total_gap: f64,
     full_time_total: f64,
+}
+
+fn maint_days(seniority: f64, cadre: bool) -> u32 {
+    // Convention collective nationale de la métallurgie (IDCC 3248).
+    if seniority < 1.0 {
+        return 0;
+    }
+    let base = if seniority < 5.0 {
+        90
+    } else if seniority < 10.0 {
+        120
+    } else if seniority < 15.0 {
+        150
+    } else {
+        180
+    };
+    // Seuls les cadres (groupes F-I) ont un maintien prolongé à 50 %.
+    let _ = cadre;
+    base
 }
 
 async fn index() -> Html<&'static str> {
@@ -62,9 +84,13 @@ async fn calc(Json(req): Json<CalcRequest>) -> impl IntoResponse {
     if req.months == 0 || req.months > 36 {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"duree invalide (1 a 36 mois)"}))).into_response();
     }
-    let phase2_rate = req.phase2_rate.unwrap_or(0.97).clamp(0.5, 1.0);
+    let cadre = req.cadre.unwrap_or(false);
+    let seniority = req.seniority_years.unwrap_or(5.0).clamp(0.0, 40.0);
+    let absence_days = req.absence_days.unwrap_or(0).min(91);
+    let mdays = maint_days(seniority, cadre);
+    let phase1_months = ((mdays as f64) / 30.0).ceil() as u32;
 
-    // Estimation net/brut : charges salariales ~22% (coef. approx.).
+    // Estimation net/brut : charges salariales ~22%.
     let gross_full = req.full_time_net / 0.78;
     let p = req.percent / 100.0;
     let worked_share = p;
@@ -77,8 +103,18 @@ async fn calc(Json(req): Json<CalcRequest>) -> impl IntoResponse {
     let mut rows = Vec::with_capacity(req.months as usize);
 
     for m in 1..=req.months {
-        let phase = if m <= 6 { "Phase 1 (100% net)" } else { "Phase 2 (95-99% net)" };
-        let phase_rate = if m <= 6 { 1.0 } else { phase2_rate };
+        let phase_rate;
+        let phase: &'static str;
+        if mdays > 0 && (m as u32) <= phase1_months {
+            phase_rate = 1.0;
+            phase = "Maintien 100 %";
+        } else if cadre && mdays > 0 && (m as u32) <= 2 * phase1_months {
+            phase_rate = 0.5;
+            phase = "Maintien 50 %";
+        } else {
+            phase_rate = 0.0;
+            phase = "Sans maintien (IJSS)";
+        }
 
         let days_unworked_this_month = 30.0 * unworked_share;
         let remaining_ij_days = (360.0 - cum_unworked_days).max(0.0);
@@ -87,11 +123,11 @@ async fn calc(Json(req): Json<CalcRequest>) -> impl IntoResponse {
 
         cum_unworked_days += days_unworked_this_month;
 
-        // IJSS bruts (estimation).
-        let ij_daily_base = gross_full / 30.0;
+        // Rétablissement approximatif du salaire de référence si absences.
+        let ref_gross_total = 3.0 * gross_full + (gross_full / 30.0) * (absence_days as f64);
+        let ij_daily_base = ref_gross_total / 91.25;
         let ij_daily = (0.5 * ij_daily_base).min(annual_ij_cap_day);
         let ij_gross = if exhausted { 0.0 } else { ij_daily * days_paid_ij };
-        // CGS/RDS sur IJ ~ 6,7 %.
         let ij_net = ij_gross * (1.0 - 0.067);
 
         let worked_net = req.full_time_net * worked_share;
@@ -99,18 +135,18 @@ async fn calc(Json(req): Json<CalcRequest>) -> impl IntoResponse {
 
         let mut complement = (target_net - worked_net - ij_net).max(0.0);
         let mut total_net = worked_net + ij_net + complement;
-        // Plafonnement légal : cumul <= salaire habituel.
         if total_net > req.full_time_net {
             total_net = req.full_time_net;
             complement = (req.full_time_net - worked_net - ij_net).max(0.0);
         }
-        // Si droits IJ épuisés, pas de maintien complementaire au-delà du travaillé.
         if exhausted {
             complement = 0.0;
-            total_net = worked_net + ij_net;
-            if total_net > req.full_time_net {
-                total_net = req.full_time_net;
-            }
+            total_net = (worked_net + ij_net).min(req.full_time_net);
+        }
+        // En l'absence de maintien conventionnel, pas de complément.
+        if phase_rate == 0.0 {
+            complement = 0.0;
+            total_net = (worked_net + ij_net).min(req.full_time_net);
         }
 
         let gap = total_net - req.full_time_net;
@@ -133,7 +169,8 @@ async fn calc(Json(req): Json<CalcRequest>) -> impl IntoResponse {
     let resp = CalcResponse {
         full_time_net: round2(req.full_time_net),
         percent: req.percent,
-        phase2_rate,
+        maint_days: mdays,
+        phase2_rate: if cadre { 0.5 } else { 0.0 },
         months: rows,
         total_income: round2(total_income),
         total_gap: round2(cumulative_gap),

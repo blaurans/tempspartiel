@@ -3,18 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Temps Partiel Thérapeutique — avionneur</title>
+<title>Temps Partiel Thérapeutique — métallurgie</title>
 <style>
   :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --accent:#38bdf8; --warn:#fbbf24; --bad:#f87171; }
   body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; padding:2rem 1rem; }
-  .card { background:var(--card); padding:2rem; border-radius:1rem; width:min(960px,96vw); margin:0 auto; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .card { background:var(--card); padding:2rem; border-radius:1rem; width:min(980px,96vw); margin:0 auto; box-shadow:0 10px 30px rgba(0,0,0,.3); }
   h1 { margin-top:0; color:var(--accent); }
-  h2 { color:var(--accent); font-size:1.1rem; margin-top:1.6rem; }
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; }
   label { display:block; margin:.8rem 0 .25rem; font-size:.9rem; opacity:.8; }
   input,select { width:100%; box-sizing:border-box; padding:.6rem; border-radius:.5rem; border:1px solid #334155; background:#0f172a; color:var(--fg); }
   button { margin-top:1.2rem; padding:.7rem 1.4rem; border:none; border-radius:.5rem; background:var(--accent); color:#0f172a; font-weight:600; cursor:pointer; }
-  .result { margin-top:1.5rem; }
   table { width:100%; border-collapse:collapse; font-size:.85rem; }
   th,td { padding:.45rem .5rem; border-bottom:1px solid #334155; text-align:right; }
   th:first-child,td:first-child { text-align:left; }
@@ -30,8 +28,8 @@
 <body>
   <div class="card">
     <h1>Temps Partiel Thérapeutique (TPT)</h1>
-    <p class="note warn">⚠️ Ce site est généré par IA et peut contenir des erreurs. Vérifier auprès des sources officielles (Assurance maladie, RH, prévoyance).</p>
-    <p>Simulation selon la loi française (IJSS) et les règles avionneur (maintien de salaire). Estimations indicatives.</p>
+    <p class="note warn">⚠️ Ce site est généré par IA et peut contenir des erreurs. Vérifier auprès des sources officielles (Assurance maladie, RH, convention collective).</p>
+    <p>Simulation selon la loi française (IJSS) et la convention collective métallurgie (maintien de salaire). Estimations indicatives.</p>
 
     <div class="grid">
       <div>
@@ -49,13 +47,25 @@
         </select>
       </div>
       <div>
-        <label for="months">Durée (mois)</label>
+        <label for="months">Durée du TPT (mois)</label>
         <input id="months" type="number" min="1" max="36" value="12">
       </div>
       <div>
-        <label for="phase2">Maintien phase 2 (%, après 180 j)</label>
-        <input id="phase2" type="number" step="1" min="50" max="100" value="97">
-        <p class="note" style="margin:.3rem 0 0">avionneur/IPECA : après 180 j, la prévoyance complète pour arriver à environ 95–99 % du net (souvent ~97 %). Vérifier dans la notice de prévoyance, le bulletin de paie ou auprès de la RH.</p>
+        <label for="seniority">Ancienneté (années)</label>
+        <input id="seniority" type="number" step="1" min="0" max="40" value="5">
+      </div>
+      <div>
+        <label for="status">Statut</label>
+        <select id="status">
+          <option value="0" selected>Non-cadre (groupes A–E)</option>
+          <option value="1">Cadre (groupes F–I)</option>
+        </select>
+        <p class="note" style="margin:.3rem 0 0">Métallurgie : 100 % du salaire selon l'ancienneté (90/120/150/180 j). Cadres : puis 50 % pour la même durée.</p>
+      </div>
+      <div>
+        <label for="absence">Jours d'arrêt dans les 3 mois de référence (pour IJSS)</label>
+        <input id="absence" type="number" step="1" min="0" max="91" value="0">
+        <p class="note" style="margin:.3rem 0 0">Utilisé pour rétablir le salaire de base CPAM si la période de référence contient un arrêt.</p>
       </div>
     </div>
     <button id="btn">Calculer mois par mois</button>
@@ -65,21 +75,22 @@
         <div class="box">Revenu net si temps plein<br><b id="fullTotal"></b></div>
         <div class="box">Revenu net cumulé en TPT<br><b id="tptTotal"></b></div>
         <div class="box">Écart cumulé<br><b id="gapTotal"></b></div>
+        <div class="box">Maintien métallurgie<br><b id="maintInfo"></b></div>
       </div>
       <table>
         <thead>
           <tr>
             <th>Mois</th><th>Phase</th><th>Salaire travaillé</th><th>IJSS (net)</th>
-            <th>Complément avionneur</th><th>Total net</th><th>Écart vs temps plein</th><th>Cumul écart</th>
+            <th>Complément</th><th>Total net</th><th>Écart vs temps plein</th><th>Cumul écart</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
-      <p class="note warn" id="exhaustNote" hidden>⚠️ Droits IJSS épuisés (360 indemnités journalières sur 3 ans) : à partir de ce mois, plus de complément Assurance Maladie.</p>
+      <p class="note warn" id="exhaustNote" hidden>⚠️ Droits IJSS épuisés (360 indemnités journalières sur 3 ans) : à partir de ce mois, plus d'indemnisation sécurité sociale pour la part non travaillée.</p>
       <p class="note">
-        Hypothèses : charges salariales estimées à ~22 %, IJSS = 50 % du salaire journalier de base, plafonnées à 41,95 €/j (2026), prises nettes après CGS/RDS (~6,7 %).
-        Cumul salaire + IJSS plafonné au salaire habituel (loi). Règles avionneur : maintien à ~100 % du net pendant 180 j puis ~95–99 % jusqu'à la fin des droits (max 3 ans / 360 IJ). IJSS sont proportionnelles aux heures non travaillées.
-        Estimation indicative — ne se substitue pas à un conseil personnalisé (RH / caisse).
+        Hypothèses : charges salariales estimées à ~22 %, IJSS = 50 % du salaire journalier de base reconstitué, plafonnées à 41,95 €/j (2026), prises nettes après CGS/RDS (~6,7 %).
+        Cumul salaire + IJSS plafonné au salaire habituel (loi). Maintien selon métallurgie : 100 % puis (pour cadres) 50 % selon l'ancienneté, max 180 j. IJSS proportionnelles aux heures non travaillées.
+        Estimation indicative — ne se substitue pas à un conseil personnalisé.
       </p>
     </div>
     <footer class="note">Rust · Axum · tempspartiel.laurans.org</footer>
@@ -90,11 +101,13 @@
     const full_time_net = parseFloat(document.getElementById('net').value);
     const percent = parseFloat(document.getElementById('pct').value);
     const months = parseInt(document.getElementById('months').value);
-    const phase2_rate = parseFloat(document.getElementById('phase2').value)/100;
+    const seniority_years = parseFloat(document.getElementById('seniority').value);
+    const cadre = document.getElementById('status').value === '1';
+    const absence_days = parseInt(document.getElementById('absence').value);
     const r = await fetch('/api/calc', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({full_time_net, percent, months, phase2_rate})
+      body: JSON.stringify({full_time_net, percent, months, seniority_years, cadre, absence_days})
     });
     if (!r.ok) { alert(await r.text()); return; }
     const d = await r.json();
@@ -104,6 +117,7 @@
     const gel = document.getElementById('gapTotal');
     gel.textContent = (g>0?'+':'') + fmt(g) + ' €';
     gel.className = g < -0.01 ? 'neg' : 'ok';
+    document.getElementById('maintInfo').textContent = d.maint_days + ' j à 100 %' + (cadre ? ' + ' + d.maint_days + ' j à 50 %' : '');
 
     const tb = document.getElementById('tbody');
     tb.innerHTML = '';
