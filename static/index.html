@@ -5,96 +5,173 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Temps Partiel Thérapeutique — métallurgie</title>
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --accent:#38bdf8; --warn:#fbbf24; --bad:#f87171; }
-  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; padding:2rem 1rem; }
-  .card { background:var(--card); padding:2rem; border-radius:1rem; width:min(980px,96vw); margin:0 auto; box-shadow:0 10px 30px rgba(0,0,0,.3); }
-  h1 { margin-top:0; color:var(--accent); }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; }
-  label { display:block; margin:.8rem 0 .25rem; font-size:.9rem; opacity:.8; }
-  input,select { width:100%; box-sizing:border-box; padding:.6rem; border-radius:.5rem; border:1px solid #334155; background:#0f172a; color:var(--fg); }
-  button { margin-top:1.2rem; padding:.7rem 1.4rem; border:none; border-radius:.5rem; background:var(--accent); color:#0f172a; font-weight:600; cursor:pointer; }
-  table { width:100%; border-collapse:collapse; font-size:.85rem; }
-  th,td { padding:.45rem .5rem; border-bottom:1px solid #334155; text-align:right; }
-  th:first-child,td:first-child { text-align:left; }
+  :root {
+    --bg:#0b1220; --card:#152033; --fg:#e6edf5; --muted:#9fb1c9;
+    --accent:#38bdf8; --accent-2:#a78bfa; --warn:#fbbf24; --bad:#f87171; --ok:#4ade80;
+    --border:#25324a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif; background:radial-gradient(1200px 600px at 20% -10%, rgba(56,189,248,.12), transparent 60%), var(--bg); color:var(--fg); min-height:100vh; padding:2.5rem 1rem; }
+  .wrap { width:min(1080px,96vw); margin:0 auto; }
+  header { margin-bottom:1.5rem; }
+  h1 { margin:0 0 .35rem; font-size:1.9rem; letter-spacing:-.02em; background:linear-gradient(90deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .subtitle { color:var(--muted); margin:0; }
+  .banner { margin:1rem 0 1.5rem; padding:.75rem 1rem; border:1px solid rgba(251,191,36,.35); background:rgba(251,191,36,.08); border-radius:.75rem; color:#fde68a; font-size:.85rem; display:flex; gap:.6rem; align-items:flex-start; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:1rem; padding:1.6rem; box-shadow:0 20px 45px rgba(0,0,0,.35); margin-bottom:1.5rem; }
+  .section-title { font-size:1.05rem; font-weight:600; margin:0 0 1rem; color:var(--fg); }
+  .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem 1.2rem; }
+  @media (max-width:900px){ .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:560px){ .grid { grid-template-columns:1fr; } }
+  .field { display:flex; flex-direction:column; }
+  .field label { display:flex; align-items:center; gap:.3rem; margin:0 0 .4rem; font-size:.85rem; color:var(--muted); font-weight:500; }
+  input,select { width:100%; padding:.62rem .7rem; border-radius:.6rem; border:1px solid var(--border); background:#0d1626; color:var(--fg); font-size:.95rem; transition:border-color .15s, box-shadow .15s; }
+  input:focus,select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(56,189,248,.18); }
+  .help { position:relative; display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:rgba(56,189,248,.15); color:var(--accent); font-size:.72rem; font-weight:700; cursor:help; user-select:none; flex:0 0 18px; }
+  .tip { position:absolute; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); min-width:230px; max-width:320px; background:#070d18; color:var(--fg); border:1px solid var(--border); padding:.65rem .75rem; border-radius:.6rem; font-size:.78rem; line-height:1.45; opacity:0; pointer-events:none; transition:opacity .15s, transform .15s; transform:translateX(-50%) translateY(4px); z-index:20; box-shadow:0 12px 30px rgba(0,0,0,.5); white-space:normal; }
+  .help:hover .tip, .help:focus .tip { opacity:1; transform:translateX(-50%) translateY(0); }
+  .help:focus { outline:2px solid var(--accent); outline-offset:2px; }
+  .actions { margin-top:1.4rem; display:flex; gap:.8rem; align-items:center; flex-wrap:wrap; }
+  button { padding:.72rem 1.5rem; border:none; border-radius:.65rem; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0b1220; font-weight:700; font-size:.95rem; cursor:pointer; transition:transform .12s, filter .12s; }
+  button:hover { transform:translateY(-1px); filter:brightness(1.08); }
+  button:active { transform:translateY(0); }
+  .result { animation:fadeIn .25s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.9rem; margin:1.1rem 0 1.3rem; }
+  @media (max-width:900px){ .summary { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:560px){ .summary { grid-template-columns:1fr; } }
+  .box { background:linear-gradient(180deg,rgba(56,189,248,.06),rgba(56,189,248,.02)); border:1px solid var(--border); border-radius:.75rem; padding:.9rem 1rem; }
+  .box span { display:block; font-size:.78rem; color:var(--muted); margin-bottom:.35rem; }
+  .box b { font-size:1.15rem; color:var(--fg); letter-spacing:-.01em; }
+  .box.accent b { color:var(--accent); }
+  .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:.75rem; max-height:420px; }
+  table { width:100%; border-collapse:separate; border-spacing:0; font-size:.86rem; }
+  thead th { position:sticky; top:0; background:#0f1a2e; color:var(--muted); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; padding:.7rem .65rem; border-bottom:1px solid var(--border); text-align:right; white-space:nowrap; }
+  thead th:first-child, thead th:nth-child(2) { text-align:left; }
+  tbody td { padding:.62rem .65rem; border-bottom:1px solid rgba(37,50,74,.6); white-space:nowrap; }
+  tbody tr:nth-child(even) { background:rgba(255,255,255,.015); }
+  tbody tr:hover { background:rgba(56,189,248,.05); }
+  tbody td:first-child, tbody td:nth-child(2) { text-align:left; }
+  .phase { font-size:.74rem; color:var(--muted); }
   .neg { color:var(--bad); }
-  .ok { color:#4ade80; }
-  .note { font-size:.8rem; opacity:.75; margin-top:.6rem; line-height:1.4; }
-  .warn { color:var(--warn); }
-  .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin:1rem 0; }
-  .box { background:#0f172a; padding:1rem; border-radius:.5rem; }
-  .box b { font-size:1.1rem; color:var(--accent); }
+  .pos { color:var(--ok); }
+  .mono { font-variant-numeric:tabular-nums; }
+  .note { font-size:.8rem; opacity:.78; margin-top:.6rem; line-height:1.45; color:var(--muted); }
+  .note.warn { color:#fde68a; opacity:1; }
+  footer { margin-top:1.4rem; text-align:center; color:var(--muted); font-size:.78rem; }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Temps Partiel Thérapeutique (TPT)</h1>
-    <p class="note warn">⚠️ Ce site est généré par IA et peut contenir des erreurs. Vérifier auprès des sources officielles (Assurance maladie, RH, convention collective).</p>
-    <p>Simulation selon la loi française (IJSS) et la convention collective métallurgie (maintien de salaire). Estimations indicatives.</p>
+  <div class="wrap">
+    <header>
+      <h1>Temps Partiel Thérapeutique</h1>
+      <p class="subtitle">Simulation selon la loi française (IJSS) et la convention collective métallurgie. Estimations indicatives.</p>
+    </header>
 
-    <div class="grid">
-      <div>
-        <label for="net">Salaire net mensuel temps plein (€)</label>
-        <input id="net" type="number" step="1" value="3000">
+    <div class="banner">
+      <span>⚠️</span>
+      <span>Ce site est généré par IA et peut contenir des erreurs. Vérifier auprès des sources officielles (Assurance maladie, RH, convention collective).</span>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Paramètres</div>
+      <div class="grid">
+        <div class="field">
+          <label for="net">Salaire net mensuel temps plein
+            <span class="help" tabindex="0" aria-label="Aide">?
+              <span class="tip">Salaire net habituellement perçu à temps plein. Utilisé comme référence pour les écarts mois par mois.</span>
+            </span>
+          </label>
+          <input id="net" type="number" step="1" min="1" value="3000">
+        </div>
+
+        <div class="field">
+          <label for="pct">Pourcentage de temps partiel
+            <span class="help" tabindex="0" aria-label="Aide">?
+              <span class="tip">Quotité de travail conservée en TPT (50 à 90 % selon prescription médicale validée par le médecin-conseil).</span>
+            </span>
+          </label>
+          <select id="pct">
+            <option value="50">50 %</option>
+            <option value="60">60 %</option>
+            <option value="70">70 %</option>
+            <option value="80" selected>80 %</option>
+            <option value="90">90 %</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="months">Durée du TPT (mois)
+            <span class="help" tabindex="0" aria-label="Aide">?
+              <span class="tip">Durée prévue du temps partiel thérapeutique (1 à 36 mois). L'indemnisation IJSS reste bornée à 360 IJ sur 3 ans.</span>
+            </span>
+          </label>
+          <input id="months" type="number" min="1" max="36" value="12">
+        </div>
+
+        <div class="field">
+          <label for="seniority">Ancienneté (années)
+            <span class="help" tabindex="0" aria-label="Aide">?
+              <span class="tip">Métallurgie : 90 j (1–5 ans), 120 j (5–10 ans), 150 j (10–15 ans), 180 j (plus de 15 ans) de maintien à 100 %. Requiert 1 an d'ancienneté (3 mois en AT/MP).</span>
+            </span>
+          </label>
+          <input id="seniority" type="number" step="1" min="0" max="40" value="5">
+        </div>
+
+        <div class="field">
+          <label for="status">Statut
+            <span class="help" tabindex="0" aria-label="Aide">?
+              <span class="tip">Non-cadre (A–E) : uniquement 100 % pendant la durée d'ancienneté. Cadre (F–I) : 100 % puis 50 % pour la même durée.</span>
+            </span>
+          </label>
+          <select id="status">
+            <option value="0" selected>Non-cadre (groupes A–E)</option>
+            <option value="1">Cadre (groupes F–I)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="absence">Jours d'arrêt dans les 3 mois de référence
+            <span class="help" tabindex="0" aria-label="Aide">?
+              <span class="tip">Si la période de référence CPAM (3 mois avant l'arrêt) contenait des arrêts maladie, indiquez leur durée totale : le salaire de base est rétabli par la CPAM.</span>
+            </span>
+          </label>
+          <input id="absence" type="number" step="1" min="0" max="91" value="0">
+        </div>
       </div>
-      <div>
-        <label for="pct">Pourcentage de temps partiel (%)</label>
-        <select id="pct">
-          <option value="50">50 %</option>
-          <option value="60">60 %</option>
-          <option value="70">70 %</option>
-          <option value="80" selected>80 %</option>
-          <option value="90">90 %</option>
-        </select>
-      </div>
-      <div>
-        <label for="months">Durée du TPT (mois)</label>
-        <input id="months" type="number" min="1" max="36" value="12">
-      </div>
-      <div>
-        <label for="seniority">Ancienneté (années)</label>
-        <input id="seniority" type="number" step="1" min="0" max="40" value="5">
-      </div>
-      <div>
-        <label for="status">Statut</label>
-        <select id="status">
-          <option value="0" selected>Non-cadre (groupes A–E)</option>
-          <option value="1">Cadre (groupes F–I)</option>
-        </select>
-        <p class="note" style="margin:.3rem 0 0">Métallurgie : 100 % du salaire selon l'ancienneté (90/120/150/180 j). Cadres : puis 50 % pour la même durée.</p>
-      </div>
-      <div>
-        <label for="absence">Jours d'arrêt dans les 3 mois de référence (pour IJSS)</label>
-        <input id="absence" type="number" step="1" min="0" max="91" value="0">
-        <p class="note" style="margin:.3rem 0 0">Utilisé pour rétablir le salaire de base CPAM si la période de référence contient un arrêt.</p>
+
+      <div class="actions">
+        <button id="btn">Calculer mois par mois</button>
+        <span class="note" style="margin:0">Astuce : survolez « ? » pour les explications.</span>
       </div>
     </div>
-    <button id="btn">Calculer mois par mois</button>
 
     <div class="result" id="out" hidden>
       <div class="summary">
-        <div class="box">Revenu net si temps plein<br><b id="fullTotal"></b></div>
-        <div class="box">Revenu net cumulé en TPT<br><b id="tptTotal"></b></div>
-        <div class="box">Écart cumulé<br><b id="gapTotal"></b></div>
-        <div class="box">Maintien métallurgie<br><b id="maintInfo"></b></div>
+        <div class="box"><span>Revenu net si temps plein</span><b id="fullTotal"></b></div>
+        <div class="box accent"><span>Revenu net cumulé en TPT</span><b id="tptTotal"></b></div>
+        <div class="box"><span>Écart cumulé</span><b id="gapTotal"></b></div>
+        <div class="box"><span>Maintien métallurgie</span><b id="maintInfo"></b></div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Mois</th><th>Phase</th><th>Salaire travaillé</th><th>IJSS (net)</th>
-            <th>Complément</th><th>Total net</th><th>Écart vs temps plein</th><th>Cumul écart</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <p class="note warn" id="exhaustNote" hidden>⚠️ Droits IJSS épuisés (360 indemnités journalières sur 3 ans) : à partir de ce mois, plus d'indemnisation sécurité sociale pour la part non travaillée.</p>
-      <p class="note">
-        Hypothèses : charges salariales estimées à ~22 %, IJSS = 50 % du salaire journalier de base reconstitué, plafonnées à 41,95 €/j (2026), prises nettes après CGS/RDS (~6,7 %).
-        Cumul salaire + IJSS plafonné au salaire habituel (loi). Maintien selon métallurgie : 100 % puis (pour cadres) 50 % selon l'ancienneté, max 180 j. IJSS proportionnelles aux heures non travaillées.
-        Estimation indicative — ne se substitue pas à un conseil personnalisé.
-      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mois</th><th>Phase</th><th>Salaire travaillé</th><th>IJSS (net)</th>
+              <th>Complément</th><th>Total net</th><th>Écart</th><th>Cumul écart</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note warn" id="exhaustNote" hidden>⚠️ Droits IJSS épuisés (360 indemnités journalières sur 3 ans) : à partir de ce mois, plus d'indemnisation pour la part non travaillée.</p>
+      <p class="note">Hypothèses : charges salariales ~22 %, IJSS = 50 % du salaire journalier de base reconstitué, plafonnées à 41,95 €/j (2026), nettes après CGS/RDS (~6,7 %). Cumul salaire + IJSS plafonné au salaire habituel (loi). Estimation indicative.</p>
     </div>
-    <footer class="note">Rust · Axum · tempspartiel.laurans.org</footer>
+
+    <footer>© Site généré par IA — peut contenir des erreurs · Rust · Axum · tempspartiel.laurans.org</footer>
   </div>
+
 <script>
   const fmt = n => Number(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('btn').addEventListener('click', async () => {
@@ -116,25 +193,26 @@
     const g = d.total_gap;
     const gel = document.getElementById('gapTotal');
     gel.textContent = (g>0?'+':'') + fmt(g) + ' €';
-    gel.className = g < -0.01 ? 'neg' : 'ok';
+    gel.className = g < -0.01 ? 'neg' : 'pos';
     document.getElementById('maintInfo').textContent = d.maint_days + ' j à 100 %' + (cadre ? ' + ' + d.maint_days + ' j à 50 %' : '');
 
     const tb = document.getElementById('tbody');
     tb.innerHTML = '';
     let exhaustedShown = false;
     d.months.forEach(m => {
-      const tr = document.createElement('tr');
-      const gapCls = m.gap < -0.01 ? 'neg' : (m.gap > 0.01 ? 'ok' : '');
       if (m.ij_exhausted) exhaustedShown = true;
+      const tr = document.createElement('tr');
+      const gapCls = m.gap < -0.01 ? 'neg' : (m.gap > 0.01 ? 'pos' : '');
+      const cumCls = m.cumulative_gap < -0.01 ? 'neg' : (m.cumulative_gap > 0.01 ? 'pos' : '');
       tr.innerHTML = `
-        <td>M${m.month}</td>
-        <td style="font-size:.75rem">${m.phase}</td>
-        <td>${fmt(m.worked_net)}</td>
-        <td>${fmt(m.ij_net)}</td>
-        <td>${fmt(m.complement)}</td>
-        <td><b>${fmt(m.total_net)}</b></td>
-        <td class="${gapCls}">${(m.gap>0?'+':'')+fmt(m.gap)}</td>
-        <td class="${m.cumulative_gap<-0.01?'neg':''}">${(m.cumulative_gap>0?'+':'')+fmt(m.cumulative_gap)}</td>`;
+        <td class="mono">M${m.month}</td>
+        <td class="phase">${m.phase}</td>
+        <td class="mono">${fmt(m.worked_net)}</td>
+        <td class="mono">${fmt(m.ij_net)}</td>
+        <td class="mono">${fmt(m.complement)}</td>
+        <td class="mono"><b>${fmt(m.total_net)}</b></td>
+        <td class="mono ${gapCls}">${(m.gap>0?'+':'')+fmt(m.gap)}</td>
+        <td class="mono ${cumCls}">${(m.cumulative_gap>0?'+':'')+fmt(m.cumulative_gap)}</td>`;
       tb.appendChild(tr);
     });
     document.getElementById('exhaustNote').hidden = !exhaustedShown;
