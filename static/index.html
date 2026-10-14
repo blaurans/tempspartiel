@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Temps Partiel Thérapeutique — Airbus</title>
+<title>Temps Partiel Thérapeutique — avionneur</title>
 <style>
   :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --accent:#38bdf8; --warn:#fbbf24; --bad:#f87171; }
   body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; padding:2rem 1rem; }
@@ -30,7 +30,8 @@
 <body>
   <div class="card">
     <h1>Temps Partiel Thérapeutique (TPT)</h1>
-    <p>Simulation selon la loi française (IJSS) et les règles Airbus (maintien de salaire). Estimations indicatives.</p>
+    <p class="note warn">⚠️ Ce site est généré par IA et peut contenir des erreurs. Vérifier auprès des sources officielles (Assurance maladie, RH, prévoyance).</p>
+    <p>Simulation selon la loi française (IJSS) et les règles avionneur (maintien de salaire). Estimations indicatives.</p>
 
     <div class="grid">
       <div>
@@ -54,7 +55,7 @@
       <div>
         <label for="phase2">Maintien phase 2 (%, après 180 j)</label>
         <input id="phase2" type="number" step="1" min="50" max="100" value="97">
-        <p class="note" style="margin:.3rem 0 0">Airbus/IPECA : après 180 j, la prévoyance complète pour arriver à environ 95–99 % du net (souvent ~97 %). Vérifier dans la notice de prévoyance, le bulletin de paie ou auprès de la RH.</p>
+        <p class="note" style="margin:.3rem 0 0">avionneur/IPECA : après 180 j, la prévoyance complète pour arriver à environ 95–99 % du net (souvent ~97 %). Vérifier dans la notice de prévoyance, le bulletin de paie ou auprès de la RH.</p>
       </div>
     </div>
     <button id="btn">Calculer mois par mois</button>
@@ -69,7 +70,7 @@
         <thead>
           <tr>
             <th>Mois</th><th>Phase</th><th>Salaire travaillé</th><th>IJSS (net)</th>
-            <th>Complément Airbus</th><th>Total net</th><th>Écart vs temps plein</th><th>Cumul écart</th>
+            <th>Complément avionneur</th><th>Total net</th><th>Écart vs temps plein</th><th>Cumul écart</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -77,7 +78,7 @@
       <p class="note warn" id="exhaustNote" hidden>⚠️ Droits IJSS épuisés (360 indemnités journalières sur 3 ans) : à partir de ce mois, plus de complément Assurance Maladie.</p>
       <p class="note">
         Hypothèses : charges salariales estimées à ~22 %, IJSS = 50 % du salaire journalier de base, plafonnées à 41,95 €/j (2026), prises nettes après CGS/RDS (~6,7 %).
-        Cumul salaire + IJSS plafonné au salaire habituel (loi). Règles Airbus : maintien à ~100 % du net pendant 180 j puis ~95–99 % jusqu'à la fin des droits (max 3 ans / 360 IJ). IJSS sont proportionnelles aux heures non travaillées.
+        Cumul salaire + IJSS plafonné au salaire habituel (loi). Règles avionneur : maintien à ~100 % du net pendant 180 j puis ~95–99 % jusqu'à la fin des droits (max 3 ans / 360 IJ). IJSS sont proportionnelles aux heures non travaillées.
         Estimation indicative — ne se substitue pas à un conseil personnalisé (RH / caisse).
       </p>
     </div>
