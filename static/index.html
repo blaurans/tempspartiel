@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temps Partiel</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --accent:#38bdf8; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .card { background:var(--card); padding:2rem; border-radius:1rem; width:min(420px,92vw); box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  h1 { margin-top:0; color:var(--accent); }
+  label { display:block; margin:1rem 0 .25rem; font-size:.9rem; opacity:.8; }
+  input { width:100%; box-sizing:border-box; padding:.6rem; border-radius:.5rem; border:1px solid #334155; background:#0f172a; color:var(--fg); }
+  button { margin-top:1.2rem; width:100%; padding:.7rem; border:none; border-radius:.5rem; background:var(--accent); color:#0f172a; font-weight:600; cursor:pointer; }
+  .result { margin-top:1.5rem; padding:1rem; border-radius:.5rem; background:#0f172a; }
+  .result div { display:flex; justify-content:space-between; margin:.3rem 0; }
+  footer { margin-top:1rem; font-size:.75rem; opacity:.5; text-align:center; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Temps Partiel</h1>
+    <p>Calculette de salaire pour un temps partiel.</p>
+    <label for="rate">Taux horaire (€/h)</label>
+    <input id="rate" type="number" step="0.01" value="12.00">
+    <label for="hours">Heures par semaine</label>
+    <input id="hours" type="number" step="0.5" value="20">
+    <label for="weeks">Semaines par mois (défaut 4,33)</label>
+    <input id="weeks" type="number" step="0.01" value="4.33">
+    <button id="btn">Calculer</button>
+    <div class="result" id="out" hidden>
+      <div><span>Heures / mois</span><b id="mh">-</b></div>
+      <div><span>Salaire brut / semaine</span><b id="wg">-</b></div>
+      <div><span>Salaire brut / mois</span><b id="mg">-</b></div>
+    </div>
+    <footer>Rust · Axum · tempspartiel.laurans.org</footer>
+  </div>
+<script>
+  document.getElementById('btn').addEventListener('click', async () => {
+    const hourly_rate = parseFloat(document.getElementById('rate').value);
+    const hours_per_week = parseFloat(document.getElementById('hours').value);
+    const weeks_per_month = parseFloat(document.getElementById('weeks').value);
+    const r = await fetch('/api/calc', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({hourly_rate, hours_per_week, weeks_per_month})
+    });
+    const d = await r.json();
+    document.getElementById('mh').textContent = d.monthly_hours;
+    document.getElementById('wg').textContent = d.weekly_gross + ' €';
+    document.getElementById('mg').textContent = d.monthly_gross + ' €';
+    document.getElementById('out').hidden = false;
+  });
+</script>
+</body>
+</html>

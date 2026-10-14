@@ -1,0 +1,31 @@
+# Déploiement sur ociub.laurans.org.
+#
+#   ssh ociub && cd /app/tempspartiel && git pull && docker compose up -d --build
+#
+# Aucun port n'est publié : le service n'est atteignable que par le
+# reverse proxy (Caddy), qui termine le TLS.
+
+services:
+  tempspartiel:
+    build:
+      context: .
+      network: host
+    image: tempspartiel:latest
+    restart: unless-stopped
+    environment:
+      TEMPS_ADDR: ":8080"
+    volumes:
+      - ./data:/data
+    networks:
+      - guacamole_internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+networks:
+  guacamole_internal:
+    external: true
+    name: guacamole_internal
