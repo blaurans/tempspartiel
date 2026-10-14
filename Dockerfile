@@ -3,11 +3,6 @@
 FROM rust:1.98-alpine AS build
 WORKDIR /src
 
-# Cache des dépendances
-COPY Cargo.toml Cargo.lock* ./
-RUN mkdir -p src && echo 'fn main(){}' > src/main.rs \
- && cargo build --release 2>/dev/null || true
-
 COPY . .
 RUN cargo build --release
 
