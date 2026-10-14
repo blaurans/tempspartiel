@@ -3,52 +3,125 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Temps Partiel</title>
+<title>Temps Partiel Thérapeutique — Airbus</title>
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --accent:#38bdf8; }
-  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; align-items:center; justify-content:center; }
-  .card { background:var(--card); padding:2rem; border-radius:1rem; width:min(420px,92vw); box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --accent:#38bdf8; --warn:#fbbf24; --bad:#f87171; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; padding:2rem 1rem; }
+  .card { background:var(--card); padding:2rem; border-radius:1rem; width:min(960px,96vw); margin:0 auto; box-shadow:0 10px 30px rgba(0,0,0,.3); }
   h1 { margin-top:0; color:var(--accent); }
-  label { display:block; margin:1rem 0 .25rem; font-size:.9rem; opacity:.8; }
-  input { width:100%; box-sizing:border-box; padding:.6rem; border-radius:.5rem; border:1px solid #334155; background:#0f172a; color:var(--fg); }
-  button { margin-top:1.2rem; width:100%; padding:.7rem; border:none; border-radius:.5rem; background:var(--accent); color:#0f172a; font-weight:600; cursor:pointer; }
-  .result { margin-top:1.5rem; padding:1rem; border-radius:.5rem; background:#0f172a; }
-  .result div { display:flex; justify-content:space-between; margin:.3rem 0; }
-  footer { margin-top:1rem; font-size:.75rem; opacity:.5; text-align:center; }
+  h2 { color:var(--accent); font-size:1.1rem; margin-top:1.6rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; }
+  label { display:block; margin:.8rem 0 .25rem; font-size:.9rem; opacity:.8; }
+  input,select { width:100%; box-sizing:border-box; padding:.6rem; border-radius:.5rem; border:1px solid #334155; background:#0f172a; color:var(--fg); }
+  button { margin-top:1.2rem; padding:.7rem 1.4rem; border:none; border-radius:.5rem; background:var(--accent); color:#0f172a; font-weight:600; cursor:pointer; }
+  .result { margin-top:1.5rem; }
+  table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  th,td { padding:.45rem .5rem; border-bottom:1px solid #334155; text-align:right; }
+  th:first-child,td:first-child { text-align:left; }
+  .neg { color:var(--bad); }
+  .ok { color:#4ade80; }
+  .note { font-size:.8rem; opacity:.75; margin-top:.6rem; line-height:1.4; }
+  .warn { color:var(--warn); }
+  .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin:1rem 0; }
+  .box { background:#0f172a; padding:1rem; border-radius:.5rem; }
+  .box b { font-size:1.1rem; color:var(--accent); }
 </style>
 </head>
 <body>
   <div class="card">
-    <h1>Temps Partiel</h1>
-    <p>Calculette de salaire pour un temps partiel.</p>
-    <label for="rate">Taux horaire (€/h)</label>
-    <input id="rate" type="number" step="0.01" value="12.00">
-    <label for="hours">Heures par semaine</label>
-    <input id="hours" type="number" step="0.5" value="20">
-    <label for="weeks">Semaines par mois (défaut 4,33)</label>
-    <input id="weeks" type="number" step="0.01" value="4.33">
-    <button id="btn">Calculer</button>
-    <div class="result" id="out" hidden>
-      <div><span>Heures / mois</span><b id="mh">-</b></div>
-      <div><span>Salaire brut / semaine</span><b id="wg">-</b></div>
-      <div><span>Salaire brut / mois</span><b id="mg">-</b></div>
+    <h1>Temps Partiel Thérapeutique (TPT)</h1>
+    <p>Simulation selon la loi française (IJSS) et les règles Airbus (maintien de salaire). Estimations indicatives.</p>
+
+    <div class="grid">
+      <div>
+        <label for="net">Salaire net mensuel temps plein (€)</label>
+        <input id="net" type="number" step="1" value="3000">
+      </div>
+      <div>
+        <label for="pct">Pourcentage de temps partiel (%)</label>
+        <select id="pct">
+          <option value="50">50 %</option>
+          <option value="60">60 %</option>
+          <option value="70">70 %</option>
+          <option value="80" selected>80 %</option>
+          <option value="90">90 %</option>
+        </select>
+      </div>
+      <div>
+        <label for="months">Durée (mois)</label>
+        <input id="months" type="number" min="1" max="36" value="12">
+      </div>
+      <div>
+        <label for="phase2">Maintien phase 2 (%, après 180 j)</label>
+        <input id="phase2" type="number" step="1" min="50" max="100" value="97">
+      </div>
     </div>
-    <footer>Rust · Axum · tempspartiel.laurans.org</footer>
+    <button id="btn">Calculer mois par mois</button>
+
+    <div class="result" id="out" hidden>
+      <div class="summary">
+        <div class="box">Revenu net si temps plein<br><b id="fullTotal"></b></div>
+        <div class="box">Revenu net cumulé en TPT<br><b id="tptTotal"></b></div>
+        <div class="box">Écart cumulé<br><b id="gapTotal"></b></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Mois</th><th>Phase</th><th>Salaire travaillé</th><th>IJSS (net)</th>
+            <th>Complément Airbus</th><th>Total net</th><th>Écart vs temps plein</th><th>Cumul écart</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p class="note warn" id="exhaustNote" hidden>⚠️ Droits IJSS épuisés (360 indemnités journalières sur 3 ans) : à partir de ce mois, plus de complément Assurance Maladie.</p>
+      <p class="note">
+        Hypothèses : charges salariales estimées à ~22 %, IJSS = 50 % du salaire journalier de base, plafonnées à 41,95 €/j (2026), prises nettes après CGS/RDS (~6,7 %).
+        Cumul salaire + IJSS plafonné au salaire habituel (loi). Règles Airbus : maintien à ~100 % du net pendant 180 j puis ~95–99 % jusqu'à la fin des droits (max 3 ans / 360 IJ). IJSS sont proportionnelles aux heures non travaillées.
+        Estimation indicative — ne se substitue pas à un conseil personnalisé (RH / caisse).
+      </p>
+    </div>
+    <footer class="note">Rust · Axum · tempspartiel.laurans.org</footer>
   </div>
 <script>
+  const fmt = n => Number(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('btn').addEventListener('click', async () => {
-    const hourly_rate = parseFloat(document.getElementById('rate').value);
-    const hours_per_week = parseFloat(document.getElementById('hours').value);
-    const weeks_per_month = parseFloat(document.getElementById('weeks').value);
+    const full_time_net = parseFloat(document.getElementById('net').value);
+    const percent = parseFloat(document.getElementById('pct').value);
+    const months = parseInt(document.getElementById('months').value);
+    const phase2_rate = parseFloat(document.getElementById('phase2').value)/100;
     const r = await fetch('/api/calc', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({hourly_rate, hours_per_week, weeks_per_month})
+      body: JSON.stringify({full_time_net, percent, months, phase2_rate})
     });
+    if (!r.ok) { alert(await r.text()); return; }
     const d = await r.json();
-    document.getElementById('mh').textContent = d.monthly_hours;
-    document.getElementById('wg').textContent = d.weekly_gross + ' €';
-    document.getElementById('mg').textContent = d.monthly_gross + ' €';
+    document.getElementById('fullTotal').textContent = fmt(d.full_time_total) + ' €';
+    document.getElementById('tptTotal').textContent = fmt(d.total_income) + ' €';
+    const g = d.total_gap;
+    const gel = document.getElementById('gapTotal');
+    gel.textContent = (g>0?'+':'') + fmt(g) + ' €';
+    gel.className = g < -0.01 ? 'neg' : 'ok';
+
+    const tb = document.getElementById('tbody');
+    tb.innerHTML = '';
+    let exhaustedShown = false;
+    d.months.forEach(m => {
+      const tr = document.createElement('tr');
+      const gapCls = m.gap < -0.01 ? 'neg' : (m.gap > 0.01 ? 'ok' : '');
+      if (m.ij_exhausted) exhaustedShown = true;
+      tr.innerHTML = `
+        <td>M${m.month}</td>
+        <td style="font-size:.75rem">${m.phase}</td>
+        <td>${fmt(m.worked_net)}</td>
+        <td>${fmt(m.ij_net)}</td>
+        <td>${fmt(m.complement)}</td>
+        <td><b>${fmt(m.total_net)}</b></td>
+        <td class="${gapCls}">${(m.gap>0?'+':'')+fmt(m.gap)}</td>
+        <td class="${m.cumulative_gap<-0.01?'neg':''}">${(m.cumulative_gap>0?'+':'')+fmt(m.cumulative_gap)}</td>`;
+      tb.appendChild(tr);
+    });
+    document.getElementById('exhaustNote').hidden = !exhaustedShown;
     document.getElementById('out').hidden = false;
   });
 </script>
